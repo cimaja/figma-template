@@ -6,14 +6,14 @@
 
 This plugin aims to improve consistency across the team by generating a starting page structure and templates to work from. It offers flexibility in the creative process by allowing a designer to opt-in to generating a structure suitable for the project at hand.
 
-Additionally, the plugin provides easy access to all Power Platform design libraries, ensuring teams can quickly find and use the right components and resources for their projects.
+Additionally, the plugin provides easy access to all team design libraries, ensuring teams can quickly find and use the right components and resources for their projects.
 
 ## Features
 
 - Generate consistent page structures and templates
 - Choose from various pre-defined templates
-- Quick access to all Power Platform design libraries
-- Organized by product sections (Power Apps, Power Pages, etc.)
+- Quick access to all team design libraries
+- Organized by team (Power Apps, Power Pages, etc.)
 - Copy library names with one click
 
 ## How to use
@@ -26,7 +26,7 @@ Additionally, the plugin provides easy access to all Power Platform design libra
 
 ### Libraries
 - Switch to the Libraries tab to view available design libraries.
-- Libraries are organized by product (Power Apps, Power Pages, etc.).
+- Libraries are organized by team.
 - Click on a library to open it in a new tab.
 - Use the copy button to quickly copy library names.
 

@@ -124,6 +124,16 @@ export const PAGES: PAGES_TYPE = {
     },
     description: 'Use this page to store designs that are in progress.',
   },
+  JTBD: {
+    pageName: '👤 JTBD',
+    componentKeys: {
+      'Power Automate': '95a57e15c89662cc8a0c594c99b5be5967c1d583',
+      'Power Apps': '76d95949cdb5d2c63ca401b05c271860abb05b9d',
+      'Power Pages': 'a38634073b34dd4034681fc7adaf289b268371c8',
+      'Power Platform Admin Center': 'defbcb4ba8b4291b7fc3f629a07e998634ab74f0',
+    },
+    description: 'Use this page to store designs that are in progress.',
+  },
   components: {
     pageName: '💠 Components',
     componentKeys: {
