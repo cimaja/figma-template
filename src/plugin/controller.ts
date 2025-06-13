@@ -1,4 +1,5 @@
-import {getNewTabItems, PAGE_DATA_TYPE, TEAMS} from '../constants'
+import { getAvailableTeams, getPagesForTeam, getLibrariesForTeam } from '../configLoader'
+import { TeamPageConfig, TeamLibraryConfig } from '../types'
 
 figma.showUI(__html__, {width: 320, height: 500})
 
@@ -38,7 +39,20 @@ figma.ui.onmessage = async (msg) => {
     }
   }
   else if (msg.type === 'get-tab-items') {
-    const items = getNewTabItems(msg.tab, msg.team || TEAMS[0])
+    const team = msg.team || (getAvailableTeams().length > 0 ? getAvailableTeams()[0] : '')
+    let items: TeamPageConfig[] | TeamLibraryConfig[] = []
+    
+    console.log('get-tab-items requested for tab:', msg.tab, 'and team:', team);
+    console.log('Available teams:', getAvailableTeams());
+    
+    if (msg.tab === 'Pages') {
+      items = getPagesForTeam(team)
+      console.log('Pages for team', team, ':', items);
+    } else {
+      items = getLibrariesForTeam(team)
+      console.log('Libraries for team', team, ':', items);
+    }
+    
     figma.ui.postMessage({ type: 'tab-items', items })
   }
   else if (msg.type === 'save-selected-team') {
@@ -46,9 +60,13 @@ figma.ui.onmessage = async (msg) => {
   }
   else if (msg.type === 'get-selected-team') {
     const savedTeam = await figma.clientStorage.getAsync('selectedTeam')
+    const availableTeams = getAvailableTeams()
+    const defaultTeam = availableTeams.length > 0 ? availableTeams[0] : ''
+    
     figma.ui.postMessage({ 
       type: 'selected-team', 
-      team: savedTeam || TEAMS[0]
+      team: savedTeam || defaultTeam,
+      availableTeams: availableTeams
     })
   }
   else if (msg.type === 'copy-to-clipboard') {
@@ -80,18 +98,27 @@ const createPages = async (msg: any) => {
   console.log('Creating pages for team:', selectedTeam)
   console.log(msg)
 
+  // Load required fonts before creating pages
+  try {
+    await figma.loadFontAsync({ family: "Segoe UI", style: "Bold" })
+  } catch (error) {
+    console.error('Error loading font:', error)
+    figma.notify('Error: Failed to load required fonts')
+    return
+  }
+
   if (numKeys > 0) {
     for (const key of keys) {
       if (selectedTab === 'Pages') {
-        const items = getNewTabItems(selectedTab, selectedTeam)
-        const pageData = items[parseInt(key)] as PAGE_DATA_TYPE
+        const items = getPagesForTeam(selectedTeam)
+        const pageData = items[parseInt(key)] as TeamPageConfig
         
         // Create page
         const page = figma.createPage()
-        page.name = pageData.pageName
+        page.name = pageData.displayPageName || pageData.pageName
 
         // Check for page templates and clone them into the page
-        const componentKey = pageData.componentKeys[selectedTeam]
+        const componentKey = pageData.componentKey
         if (componentKey && pageData.pageName) {
           try {
             // Get the component from the Tools library by component.key

@@ -15,6 +15,7 @@ Additionally, the plugin provides easy access to all team design libraries, ensu
 - Quick access to all team design libraries
 - Organized by team (Power Apps, Power Pages, etc.)
 - Copy library names with one click
+- **NEW**: Dynamically configurable teams with their own page templates and libraries
 
 ## How to use
 
@@ -32,29 +33,70 @@ Additionally, the plugin provides easy access to all team design libraries, ensu
 
 ## How to update
 
-#### 1. Add/Remove Pages
+### 1. Add/Remove Teams
 
-See `src/constants.ts`
+Teams are now defined in individual files within the `src/teams/` directory. To add a new team:
 
-Simply add a new index to the `PAGES` object and fill in the relevant properties.
+1. Create a new file in the `src/teams/` directory (e.g., `myNewTeam.ts`).
+2. Export the required properties:
+   - `teamName` (string): The display name of the team
+   - `pages` (array): A list of page templates specific to this team
+   - `libraries` (array): A list of libraries specific to this team
+3. Rebuild the plugin (`yarn build:watch` or `yarn build`).
 
-| Property                       | Description                                                                                                                                                      | Type   |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| **pageName**                   | The name of the page to generate. This will show up in the plugin UI itself, and also acts as the default pageName in Figma (overridable by `displayPageName`).  | string |
-| **componentKey**               | The `component.key` for the master component of the template in the `Tools - Design File Template` Figma file. (hint: use the Figma Inspector plugin to find it) | string |
-| **description**                | A brief description of the page. This is used as the checkbox hover `title` in the plugin UI.                                                                    | string |
-| **displayPageName** (optional) | An optional "pretty" display name for the page in Figma.                                                                                                         | string |
+Example team file structure:
+```typescript
+import { TeamPageConfig, TeamLibraryConfig } from '../types';
 
-### 2. Update Templates
+export const teamName: string = "My New Team";
+
+export const pages: TeamPageConfig[] = [
+  {
+    id: "cover",
+    pageName: "📋 Cover",
+    componentKey: "your_component_key_here",
+    description: "Cover page description"
+  },
+  // Add more pages as needed
+];
+
+export const libraries: TeamLibraryConfig[] = [
+  {
+    name: "My Team UI Kit",
+    description: "Core UI components",
+    fileKey: "figma_file_key_here"
+  },
+  // Add more libraries as needed
+];
+```
+
+### 2. Add/Remove Pages for a Team
+
+To add or modify pages for a specific team:
+
+1. Open the team's file in `src/teams/` (e.g., `powerApps.ts`).
+2. Add, modify, or remove entries in the `pages` array.
+3. Each page needs:
+   - `id`: Unique identifier for the page
+   - `pageName`: Name displayed in the UI and used for the Figma page
+   - `componentKey`: The Figma component key for this page's template
+   - `description`: A brief description of the page
+   - `displayPageName` (optional): An optional "pretty" name for the Figma page
+
+### 3. Add/Remove Libraries for a Team
+
+To add or modify libraries for a specific team:
+
+1. Open the team's file in `src/teams/` (e.g., `powerApps.ts`).
+2. Add, modify, or remove entries in the `libraries` array.
+3. Each library needs:
+   - `name`: The display name of the library
+   - `description`: A brief description of the library
+   - `fileKey`: The Figma file key for the library
+
+### 4. Update Templates
 
 The pages that are generated are based off of template pages in the library you created. These page templates can be updated to however the team see's fit, remember to publish when done. Upon next use of the plugin, it will reference and generate from the latest updated template.
-
-### 3. Add/Remove Libraries
-
-Libraries are organized by product sections in `src/constants.ts`. To add a new library, add an entry to the appropriate section with:
-- **name**: The display name of the library
-- **description**: A brief description of the library
-- **fileKey**: The Figma file key for the library
 
 ## Development
 

@@ -1,38 +1,52 @@
 import * as React from 'react'
-import {TABS, getNewTabItems, PAGE_DATA_TYPE, LIBRARY_ITEM_TYPE, TEAMS} from '../../constants'
+import { TABS } from '../../constants'
+import { TeamPageConfig, TeamLibraryConfig } from '../../types'
 import 'figma-plugin-ds/dist/figma-plugin-ds.css'
 import '../styles/ui.css'
 
 const App: React.FC = () => {
   const [selectedCheckboxes, setSelectedCheckboxes] = React.useState<Set<string>>(new Set())
   const [selectedTab, setSelectedTab] = React.useState(TABS[0])
-  const [selectedTabItems, setSelectedTabItems] = React.useState<PAGE_DATA_TYPE[] | LIBRARY_ITEM_TYPE[]>([])
-  const [selectedTeam, setSelectedTeam] = React.useState(TEAMS[0])
+  const [selectedTabItems, setSelectedTabItems] = React.useState<TeamPageConfig[] | TeamLibraryConfig[]>([])
+  const [selectedTeam, setSelectedTeam] = React.useState('')
+  const [availableTeams, setAvailableTeams] = React.useState<string[]>([])
   const [copiedIndex, setCopiedIndex] = React.useState<number | null>(null)
 
   React.useEffect(() => {
     // Load saved team on mount
     parent.postMessage({ pluginMessage: { type: 'get-selected-team' } }, '*')
-    changeTabs(selectedTab)
 
     // Listen for messages from the plugin
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage
       if (!msg) return
 
+      console.log('Received message from plugin:', msg);
+
       switch (msg.type) {
-        case 'team-loaded':
-          setSelectedTeam(msg.team)
-          break
-        case 'items-loaded':
-          setSelectedTabItems(msg.items)
-          break
         case 'selected-team':
+          console.log('Selected team:', msg.team);
+          console.log('Available teams:', msg.availableTeams);
           setSelectedTeam(msg.team)
-          if (selectedTab === 'Libraries') {
-            setSelectedTabItems(getNewTabItems(selectedTab, msg.team))
+          setAvailableTeams(msg.availableTeams || [])
+          if (msg.team) {
+            // Request items for the selected team and tab
+            parent.postMessage({ 
+              pluginMessage: { 
+                type: 'get-tab-items', 
+                tab: selectedTab, 
+                team: msg.team 
+              } 
+            }, '*')
           }
-          break
+          break;
+        case 'tab-items':
+          console.log('Received tab items:', msg.items);
+          setSelectedTabItems(msg.items)
+          break;
+        case 'open-url':
+          window.open(msg.url, '_blank')
+          break;
       }
     }
   }, [])
@@ -66,17 +80,32 @@ const App: React.FC = () => {
   const handleTeamChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const team = event.target.value
     setSelectedTeam(team)
+    
     // Save team selection
     parent.postMessage({ pluginMessage: { type: 'save-selected-team', team } }, '*')
-    if (selectedTab === 'Libraries') {
-      setSelectedTabItems(getNewTabItems(selectedTab, team))
-    }
+    
+    // Request items for the new team and current tab
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'get-tab-items', 
+        tab: selectedTab, 
+        team: team 
+      } 
+    }, '*')
   }
 
   const changeTabs = (tab: string) => {
     setSelectedTab(tab)
-    const newItems = getNewTabItems(tab, selectedTeam)
-    setSelectedTabItems(newItems)
+    
+    // Request items for the selected tab and current team
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'get-tab-items', 
+        tab: tab, 
+        team: selectedTeam 
+      } 
+    }, '*')
+    
     setSelectedCheckboxes(new Set())
   }
 
@@ -103,12 +132,17 @@ const App: React.FC = () => {
     setTimeout(() => {
       setCopiedIndex(null)
     }, 1000)
+    
+    // Notify the plugin
+    parent.postMessage({ pluginMessage: { type: 'copy-to-clipboard' } }, '*')
   }
 
   const renderPagesTab = () => {
-    const items = selectedTabItems as PAGE_DATA_TYPE[]
+    const items = selectedTabItems as TeamPageConfig[]
     const allSelected = selectedCheckboxes.size === items.length && items.length > 0
 
+    console.log('Rendering Pages tab with items:', items);
+    
     return (
       <>
         <div className="checkbox-wrapper" onClick={onSelectAll}>
@@ -137,7 +171,7 @@ const App: React.FC = () => {
   }
 
   const renderLibrariesTab = () => {
-    const libraries = selectedTabItems as LIBRARY_ITEM_TYPE[]
+    const libraries = selectedTabItems as TeamLibraryConfig[]
 
     return (
       <>
@@ -200,7 +234,7 @@ const App: React.FC = () => {
           value={selectedTeam}
           onChange={handleTeamChange}
         >
-          {TEAMS.map((team) => (
+          {availableTeams.map((team) => (
             <option key={team} value={team}>
               {team}
             </option>

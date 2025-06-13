@@ -12,6 +12,8 @@
     "typeRoots": [
       "./node_modules/@types",
       "./node_modules/@figma"
-    ]
+    ],
+    "skipLibCheck": true,
+    "lib": ["es2015", "dom"]
   }
 }
